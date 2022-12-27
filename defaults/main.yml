@@ -8,6 +8,10 @@ docker_packages:
   - "containerd.io"
 docker_packages_state: present
 
+docker_force_apt_key_download: false
+
+docker_apt_gpg_key_file: /etc/apt/trusted.gpg.d/docker.asc
+
 # Service options.
 docker_service_manage: true
 docker_service_state: started

@@ -25,14 +25,24 @@
     state: present
   when: ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('20.04', '>=')
 
+# Fixes get_url in check_mode problems discussed here:
+# https://github.com/ansible/ansible/issues/65687
+# https://github.com/ansible/ansible/issues/61369
+
+- name: Check apt gpg file exists
+  stat: 
+    path: "{{ docker_apt_gpg_key_file }}"
+  register: apt_gpg_key_file_register
+
 - name: Add Docker apt key.
   ansible.builtin.get_url:
     url: "{{ docker_apt_gpg_key }}"
-    dest: /etc/apt/trusted.gpg.d/docker.asc
+    dest: "{{ docker_apt_gpg_key_file }}"
     mode: '0644'
     force: true
   register: add_repository_key
   ignore_errors: "{{ docker_apt_ignore_key_error }}"
+  when: not apt_gpg_key_file_register.stat.exists or docker_force_apt_key_download
 
 - name: Ensure curl is present (on older systems without SNI).
   package: name=curl state=present
